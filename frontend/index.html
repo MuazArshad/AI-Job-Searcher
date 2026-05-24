@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Job Hunting Agent — Find Your Dream Job</title>
+  <meta name="description" content="Upload your resume and let AI find the best job opportunities tailored to your skills across the entire internet." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ══════════ BACKGROUND ══════════ -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- ══════════ HEADER ══════════ -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🤖</span>
+        <span class="logo-text">JobHunter <span class="logo-ai">AI</span></span>
+      </div>
+      <div class="header-badge">Powered by Groq</div>
+    </div>
+  </header>
+
+  <!-- ══════════ HERO ══════════ -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-tag">
+        <span class="pulse-dot"></span>
+        AI-Powered • Multi-Source • Real-Time
+      </div>
+      <h1 class="hero-title">
+        Your Personal<br />
+        <span class="gradient-text">AI Job Hunter</span>
+      </h1>
+      <p class="hero-subtitle">
+        Upload your resume. Our AI analyzes your skills, searches hundreds of job boards
+        simultaneously, and ranks the best matches — so you apply smarter, not harder.
+      </p>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">6+</span><span class="stat-label">Job Sources</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">AI</span><span class="stat-label">Match Scoring</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">100%</span><span class="stat-label">Automated</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ MAIN PANEL ══════════ -->
+  <main class="main-panel">
+
+    <!-- Step 1: Resume Upload -->
+    <section class="card step-card" id="step-upload">
+      <div class="step-header">
+        <div class="step-badge">Step 1</div>
+        <h2 class="step-title">Upload Your Resume</h2>
+        <p class="step-desc">PDF or DOCX — Groq AI will analyze it instantly</p>
+      </div>
+
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="resumeFile" accept=".pdf,.docx,.doc,.txt" hidden />
+        <div class="upload-icon">📄</div>
+        <div class="upload-text">
+          <strong>Drag & drop your resume here</strong>
+          <span>or click to browse</span>
+        </div>
+        <div class="upload-hint">PDF, DOCX, DOC, TXT — max 10 MB</div>
+      </div>
+
+      <div class="file-info" id="fileInfo" style="display:none">
+        <div class="file-info-inner">
+          <span class="file-icon">📎</span>
+          <span class="file-name" id="fileName"></span>
+          <button class="btn-remove" id="removeFile">✕</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btnAnalyze" disabled>
+        <span class="btn-icon">🔍</span>
+        Analyze Resume with AI
+      </button>
+    </section>
+
+    <!-- Resume Analysis Result -->
+    <section class="card resume-result" id="resumeResult" style="display:none">
+      <div class="result-header">
+        <div class="result-icon">✨</div>
+        <div>
+          <h2 class="result-title">Resume Analysis Complete</h2>
+          <p class="result-sub">Here's what Groq extracted from your resume</p>
+        </div>
+      </div>
+      <div class="resume-grid" id="resumeGrid"></div>
+    </section>
+
+    <!-- Step 2: Search Filters -->
+    <section class="card step-card" id="step-filters" style="display:none">
+      <div class="step-header">
+        <div class="step-badge">Step 2</div>
+        <h2 class="step-title">Set Your Search Preferences</h2>
+        <p class="step-desc">Fine-tune where and how you want to work</p>
+      </div>
+
+      <div class="filters-grid">
+        <!-- Location -->
+        <div class="filter-group">
+          <label class="filter-label" for="locationInput">
+            <span class="filter-label-icon">📍</span> Location
+          </label>
+          <input
+            type="text"
+            id="locationInput"
+            class="filter-input"
+            placeholder="e.g. New York, London, Pakistan, Remote..."
+          />
+          <div class="filter-hint">Leave empty to search worldwide</div>
+        </div>
+
+        <!-- Work Mode -->
+        <div class="filter-group">
+          <label class="filter-label">
+            <span class="filter-label-icon">🏢</span> Work Mode
+          </label>
+          <div class="work-mode-grid" id="workModeGrid">
+            <button class="mode-btn active" data-mode="Any" id="modeAny">
+              <span class="mode-icon">🌐</span>
+              <span class="mode-label">Any</span>
+            </button>
+            <button class="mode-btn" data-mode="Remote" id="modeRemote">
+              <span class="mode-icon">🏠</span>
+              <span class="mode-label">Remote</span>
+            </button>
+            <button class="mode-btn" data-mode="Hybrid" id="modeHybrid">
+              <span class="mode-icon">🔄</span>
+              <span class="mode-label">Hybrid</span>
+            </button>
+            <button class="mode-btn" data-mode="Onsite" id="modeOnsite">
+              <span class="mode-icon">🏙️</span>
+              <span class="mode-label">Onsite</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Optional API Keys -->
+      <details class="api-keys-section">
+        <summary class="api-keys-toggle">
+          <span>⚡ Optional: Add API Keys for More Results</span>
+          <span class="toggle-arrow">▸</span>
+        </summary>
+        <div class="api-keys-grid">
+          <div class="filter-group">
+            <label class="filter-label" for="rapidApiKey">
+              <span class="filter-label-icon">🔑</span> RapidAPI Key
+              <span class="badge-optional">Optional</span>
+            </label>
+            <input type="password" id="rapidApiKey" class="filter-input" placeholder="Enables Indeed, LinkedIn, Glassdoor..." />
+            <div class="filter-hint">Get free key at rapidapi.com → JSearch</div>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label" for="adzunaId">
+              <span class="filter-label-icon">🔑</span> Adzuna App ID
+              <span class="badge-optional">Optional</span>
+            </label>
+            <input type="text" id="adzunaId" class="filter-input" placeholder="Adzuna App ID..." />
+          </div>
+          <div class="filter-group">
+            <label class="filter-label" for="adzunaKey">
+              <span class="filter-label-icon">🔑</span> Adzuna App Key
+              <span class="badge-optional">Optional</span>
+            </label>
+            <input type="password" id="adzunaKey" class="filter-input" placeholder="Adzuna App Key..." />
+            <div class="filter-hint">Get free key at developer.adzuna.com</div>
+          </div>
+        </div>
+      </details>
+
+      <button class="btn-primary btn-hunt" id="btnHunt">
+        <span class="btn-icon">🚀</span>
+        Start Hunting Jobs!
+      </button>
+    </section>
+
+    <!-- Loading State -->
+    <section class="card loading-card" id="loadingCard" style="display:none">
+      <div class="loading-animation">
+        <div class="loading-orb"></div>
+        <div class="loading-orb delay-1"></div>
+        <div class="loading-orb delay-2"></div>
+      </div>
+      <h3 class="loading-title" id="loadingTitle">Searching across the internet...</h3>
+      <p class="loading-sub" id="loadingSub">Querying multiple job boards simultaneously</p>
+      <div class="sources-list" id="sourcesList">
+        <div class="source-item" data-id="s1">🌐 RemoteOK</div>
+        <div class="source-item" data-id="s2">💼 Jobicy</div>
+        <div class="source-item" data-id="s3">✨ The Muse</div>
+        <div class="source-item" data-id="s4">🇪🇺 Arbeitnow</div>
+        <div class="source-item" data-id="s5">🤖 AI Ranking...</div>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section id="resultsSection" style="display:none">
+      <div class="results-header">
+        <div class="results-title-wrap">
+          <h2 class="results-title">🎯 Job Matches Found</h2>
+          <div class="results-meta">
+            <span id="resultsCount" class="results-count">0 jobs</span>
+            <span class="results-dot">•</span>
+            <span id="resultsKeywords" class="results-keywords"></span>
+          </div>
+        </div>
+        <button class="btn-secondary" id="btnSearchAgain">🔄 New Search</button>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="results-filter-bar">
+        <button class="filter-tab active" data-score="all" id="tabAll">All Jobs</button>
+        <button class="filter-tab" data-score="80" id="tabGreat">🔥 Great Match (80+)</button>
+        <button class="filter-tab" data-score="60" id="tabGood">👍 Good Match (60+)</button>
+        <div class="sort-group">
+          <label class="filter-label" style="margin:0">Sort:</label>
+          <select id="sortSelect" class="sort-select">
+            <option value="score">Best Match</option>
+            <option value="recent">Most Recent</option>
+            <option value="company">Company</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Job cards grid -->
+      <div class="jobs-grid" id="jobsGrid"></div>
+
+      <!-- No results -->
+      <div class="no-results" id="noResults" style="display:none">
+        <div class="no-results-icon">🔎</div>
+        <h3>No jobs match your current filters</h3>
+        <p>Try adjusting the work mode or removing the location filter</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ══════════ FOOTER ══════════ -->
+  <footer class="footer">
+    <p>Built with ❤️ using Groq AI • Searches RemoteOK, Jobicy, The Muse, Arbeitnow & more</p>
+  </footer>
+
+  <!-- ══════════ TOAST ══════════ -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

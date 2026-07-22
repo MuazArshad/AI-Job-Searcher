@@ -6,4 +6,4 @@ backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ba
 if backend_path not in sys.path:
     sys.path.insert(0, backend_path)
 
-from main import app  # Top-level ASGI application for Vercel
+from main import app  # type: ignore # Top-level ASGI application for Vercel

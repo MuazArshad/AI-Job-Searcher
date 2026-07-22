@@ -1,0 +1,9 @@
+import sys
+import os
+
+# Add backend directory to module search path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
+
+from main import app
+
+# Vercel requires the FastAPI instance named 'app'

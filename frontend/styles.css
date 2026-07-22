@@ -401,3 +401,25 @@ details[open] .toggle-arrow { transform: rotate(90deg); }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.5); }
+
+/* ─── Platform Badges & Skill Tags ─── */
+.job-company-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.6rem;
+}
+.job-source-tag {
+  font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.55rem; border-radius: 20px;
+  background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc; text-transform: capitalize;
+}
+.job-source-tag.source-indeed { background: rgba(37, 87, 167, 0.25); border-color: rgba(37, 87, 167, 0.5); color: #60a5fa; }
+.job-source-tag.source-linkedin { background: rgba(10, 102, 194, 0.25); border-color: rgba(10, 102, 194, 0.5); color: #38bdf8; }
+.job-source-tag.source-glassdoor { background: rgba(12, 170, 65, 0.2); border-color: rgba(12, 170, 65, 0.4); color: #4ade80; }
+.job-source-tag.source-ziprecruiter { background: rgba(43, 114, 226, 0.2); border-color: rgba(43, 114, 226, 0.4); color: #818cf8; }
+
+.matching-skills-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin: 0.6rem 0; font-size: 0.75rem;
+}
+.skills-label { font-weight: 600; color: var(--text-muted); margin-right: 0.2rem; }
+.skill-chip {
+  background: rgba(16, 185, 129, 0.12) !important; border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important; font-size: 0.72rem !important; padding: 0.1rem 0.45rem !important; border-radius: 4px !important;
+}

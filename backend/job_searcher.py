@@ -392,6 +392,102 @@ async def fetch_arbeitnow(keywords: list, work_mode_filter: str, client: httpx.A
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Source 7: JobSpy (Indeed, LinkedIn, Glassdoor, ZipRecruiter)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _run_jobspy_sync(search_term: str, location: str, is_remote: bool = False, results_wanted: int = 20) -> list:
+    """Run JobSpy scraping synchronously in a worker thread."""
+    try:
+        import pandas as pd
+        from jobspy import scrape_jobs
+        
+        sites = ["indeed", "linkedin", "glassdoor", "zip_recruiter"]
+        loc = location.strip() if location and location.strip() else "United States"
+        
+        df = scrape_jobs(
+            site_name=sites,
+            search_term=search_term,
+            location=loc,
+            results_wanted=results_wanted,
+            hours_old=168,
+            is_remote=is_remote,
+            country_indeed='USA',
+        )
+        
+        if df is None or df.empty:
+            return []
+            
+        jobs = []
+        for _, row in df.iterrows():
+            title = str(row.get('title') or '').strip()
+            company = str(row.get('company') or '').strip()
+            if not title or title.lower() == 'nan' or not company or company.lower() == 'nan':
+                continue
+                
+            raw_site = str(row.get('site') or 'JobBoard').lower()
+            if 'indeed' in raw_site:
+                site = 'Indeed'
+            elif 'linkedin' in raw_site:
+                site = 'LinkedIn'
+            elif 'glassdoor' in raw_site:
+                site = 'Glassdoor'
+            elif 'zip' in raw_site:
+                site = 'ZipRecruiter'
+            else:
+                site = raw_site.capitalize()
+                
+            job_url = str(row.get('job_url') or '').strip()
+            description = str(row.get('description') or '').strip()
+            if not description or description.lower() == 'nan':
+                description = f"Full job description available for {title} at {company} on {site}."
+            else:
+                description = description[:600]
+                
+            job_loc = str(row.get('location') or loc).strip()
+            if not job_loc or job_loc.lower() == 'nan':
+                job_loc = loc
+                
+            is_job_remote = bool(row.get('is_remote', False)) or ("remote" in job_loc.lower())
+            work_mode = "Remote" if is_job_remote else ("Hybrid" if "hybrid" in job_loc.lower() else "Onsite")
+            
+            min_sal = row.get('min_amount')
+            max_sal = row.get('max_amount')
+            salary_str = ""
+            if min_sal and not pd.isna(min_sal) and max_sal and not pd.isna(max_sal):
+                salary_str = f"${int(min_sal):,} – ${int(max_sal):,}/yr"
+                
+            jobs.append({
+                "id": f"{site.lower()}_{abs(hash(title + company))}",
+                "title": title,
+                "company": company,
+                "location": job_loc,
+                "work_mode": work_mode,
+                "description": description,
+                "url": job_url if (job_url and job_url.lower() != 'nan') else "https://www.google.com/search?q=" + title.replace(' ', '+'),
+                "posted_at": str(row.get('date_posted') or ''),
+                "salary": salary_str,
+                "source": site,
+                "tags": [search_term],
+            })
+        return jobs
+    except Exception as e:
+        print(f"[JobSpy] Scraper notice: {e}")
+        return []
+
+
+async def fetch_jobspy_jobs(keywords: list, location: str, work_mode_filter: str) -> list:
+    """Scrape Indeed, LinkedIn, Glassdoor & ZipRecruiter asynchronously via JobSpy."""
+    search_term = keywords[0] if keywords else "Software Engineer"
+    is_remote = (work_mode_filter or "").lower() == "remote"
+    
+    try:
+        jobs = await asyncio.to_thread(_run_jobspy_sync, search_term, location, is_remote)
+        return jobs
+    except Exception:
+        return []
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Main aggregator
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -404,11 +500,12 @@ async def search_all_sources(
     adzuna_app_key: str = "",
 ) -> list:
     """
-    Search all configured job sources in parallel and return aggregated results.
-    Deduplicates by title+company.
+    Search all configured job sources (Indeed, LinkedIn, Glassdoor, ZipRecruiter, RemoteOK, Jobicy, The Muse, etc.)
+    in parallel and return aggregated, deduplicated results.
     """
     async with httpx.AsyncClient(follow_redirects=True) as client:
         tasks = [
+            fetch_jobspy_jobs(keywords, location, work_mode_filter),
             fetch_remoteok(keywords, work_mode_filter, client),
             fetch_jobicy(keywords, work_mode_filter, client),
             fetch_themuse(keywords, work_mode_filter, client),
@@ -428,23 +525,36 @@ async def search_all_sources(
         if isinstance(result, list):
             all_jobs.extend(result)
 
+    # Filter by work mode if strictly requested (Remote/Hybrid/Onsite)
+    if work_mode_filter and work_mode_filter.lower() not in ("any", ""):
+        req_mode = work_mode_filter.lower()
+        mode_filtered = []
+        for job in all_jobs:
+            job_mode = job.get("work_mode", "").lower()
+            if req_mode == "remote" and (job_mode == "remote" or "remote" in job.get("location", "").lower()):
+                mode_filtered.append(job)
+            elif req_mode == job_mode or req_mode == "any":
+                mode_filtered.append(job)
+        if mode_filtered:
+            all_jobs = mode_filtered
+
     # Filter by location if specified (fuzzy match)
     if location and location.strip():
         loc_lower = location.lower()
         location_filtered = []
         for job in all_jobs:
             job_loc = (job.get("location", "") + " " + job.get("work_mode", "")).lower()
-            # Include job if location matches OR it's remote (remote is location-agnostic)
             if loc_lower in job_loc or job.get("work_mode", "").lower() == "remote":
                 location_filtered.append(job)
-        all_jobs = location_filtered
+        if location_filtered:
+            all_jobs = location_filtered
 
-    # Deduplicate by normalized title+company
+    # Deduplicate by normalized title + company
     seen = set()
     unique_jobs = []
     for job in all_jobs:
         key = (job.get("title", "").lower().strip(), job.get("company", "").lower().strip())
-        if key not in seen:
+        if key not in seen and key[0] and key[1]:
             seen.add(key)
             unique_jobs.append(job)
 

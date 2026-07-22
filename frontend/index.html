@@ -111,6 +111,20 @@
       </div>
 
       <div class="filters-grid">
+        <!-- Target Job Title Query Override -->
+        <div class="filter-group" style="grid-column: 1 / -1;">
+          <label class="filter-label" for="customQueryInput">
+            <span class="filter-label-icon">💼</span> Specific Job Title / Keyword (Optional)
+          </label>
+          <input
+            type="text"
+            id="customQueryInput"
+            class="filter-input"
+            placeholder="e.g. Python Developer, Full Stack Engineer, Data Analyst..."
+          />
+          <div class="filter-hint">If left empty, AI automatically determines the best keywords from your resume</div>
+        </div>
+
         <!-- Location -->
         <div class="filter-group">
           <label class="filter-label" for="locationInput">
@@ -120,7 +134,7 @@
             type="text"
             id="locationInput"
             class="filter-input"
-            placeholder="e.g. New York, London, Pakistan, Remote..."
+            placeholder="e.g. Dallas TX, London, Lahore, Remote..."
           />
           <div class="filter-hint">Leave empty to search worldwide</div>
         </div>

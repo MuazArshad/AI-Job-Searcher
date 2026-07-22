@@ -181,6 +181,7 @@ function animateSources() {
 btnHunt.addEventListener('click', async () => {
   if (!resumeData) { showToast('Please analyze your resume first.', 'error'); return; }
 
+  const customQuery = document.getElementById('customQueryInput')?.value.trim() || '';
   const location = document.getElementById('locationInput').value.trim();
   const rapidApiKey = document.getElementById('rapidApiKey').value.trim();
   const adzunaId   = document.getElementById('adzunaId').value.trim();
@@ -191,8 +192,8 @@ btnHunt.addEventListener('click', async () => {
   resumeResult.style.display = 'none';
   resultsSection.style.display = 'none';
   loadingCard.style.display = 'block';
-  loadingTitle.textContent = 'Searching across the internet...';
-  loadingSub.textContent = 'Querying multiple job boards simultaneously';
+  loadingTitle.textContent = 'Searching Indeed, LinkedIn, Glassdoor & Remote Boards...';
+  loadingSub.textContent = 'Scraping and aggregating live job listings in real-time';
   document.querySelectorAll('.source-item').forEach(el => el.className = 'source-item');
   loadingCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
@@ -201,6 +202,7 @@ btnHunt.addEventListener('click', async () => {
   try {
     const payload = {
       resume_data: resumeData,
+      custom_query: customQuery,
       location: location,
       work_mode: selectedWorkMode,
       rapidapi_key: rapidApiKey,
@@ -208,8 +210,8 @@ btnHunt.addEventListener('click', async () => {
       adzuna_app_key: adzunaKey,
     };
 
-    loadingTitle.textContent = 'Ranking matches with Gemini AI...';
-    loadingSub.textContent = 'This may take 20–40 seconds';
+    loadingTitle.textContent = 'Evaluating & Ranking matches with Groq AI...';
+    loadingSub.textContent = 'Calculating candidate fit & skill overlap scores';
 
     const res = await fetch(`${API}/search-jobs`, {
       method: 'POST',
@@ -223,7 +225,7 @@ btnHunt.addEventListener('click', async () => {
 
     allJobs = data.jobs || [];
     const keywords = (data.keywords_used || []).join(', ');
-    resultsKeywords.textContent = keywords ? `Keywords: ${keywords}` : '';
+    resultsKeywords.textContent = keywords ? `Target Query: ${keywords}` : '';
 
     loadingCard.style.display = 'none';
     resultsSection.style.display = 'block';
@@ -234,7 +236,7 @@ btnHunt.addEventListener('click', async () => {
     document.getElementById('tabAll').classList.add('active');
 
     renderJobs(allJobs);
-    showToast(`Found ${allJobs.length} job matches! 🎯`, 'success');
+    showToast(`Found ${allJobs.length} live job matches! 🎯`, 'success');
   } catch (err) {
     clearInterval(srcInterval);
     loadingCard.style.display = 'none';
@@ -273,14 +275,19 @@ function jobCardHTML(job, idx) {
   const barColor = score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#64748b';
   const modeClass = (job.work_mode||'').toLowerCase();
   const modeIcon = modeClass === 'remote' ? '🏠' : modeClass === 'hybrid' ? '🔄' : '🏢';
-  const src = job.source ? `<span class="job-source">via ${job.source}</span>` : '';
+  
+  const sourceName = job.source || 'Direct';
+  const srcBadge = `<span class="job-source-tag source-${sourceName.toLowerCase()}">via ${sourceName}</span>`;
+  
   const sal = job.salary ? `<span class="job-salary">💰 ${job.salary}</span>` : '';
-  const tags = (job.tags || []).slice(0,3).map(t => `<span class="meta-tag">${t}</span>`).join('');
+  
+  const matchingSkills = (job.matching_skills || []).map(s => `<span class="chip skill-chip">✓ ${s}</span>`).join('');
+  const tags = (job.tags || []).slice(0,2).map(t => `<span class="meta-tag">${t}</span>`).join('');
   const postedDate = job.posted_at ? `<span class="meta-tag">📅 ${formatDate(job.posted_at)}</span>` : '';
-  const desc = stripHTML(job.description || '').slice(0, 180).trim();
+  const desc = stripHTML(job.description || '').slice(0, 220).trim();
   const reason = job.match_reason ? `<div class="job-reason">🤖 ${job.match_reason}</div>` : '';
   const applyUrl = job.url || '#';
-  const animDelay = Math.min(idx * 0.05, 0.8);
+  const animDelay = Math.min(idx * 0.04, 0.6);
 
   return `
   <div class="job-card" style="animation-delay:${animDelay}s">
@@ -288,7 +295,10 @@ function jobCardHTML(job, idx) {
       <div class="job-title">${escHTML(job.title || 'Untitled Position')}</div>
       <div class="match-badge ${badgeClass}">${score}% match</div>
     </div>
-    <div class="job-company">${escHTML(job.company || 'Company not listed')}</div>
+    <div class="job-company-row">
+      <span class="job-company">${escHTML(job.company || 'Company not listed')}</span>
+      ${srcBadge}
+    </div>
     <div class="score-bar-wrap">
       <div class="score-bar-track">
         <div class="score-bar-fill" data-width="${score}" style="width:0%;background:${barColor}"></div>
@@ -300,14 +310,16 @@ function jobCardHTML(job, idx) {
       ${postedDate}
       ${tags}
     </div>
-    ${desc ? `<div class="job-desc">${escHTML(desc)}${job.description && job.description.length > 180 ? '…' : ''}</div>` : ''}
+    ${matchingSkills ? `<div class="matching-skills-row"><span class="skills-label">Matching Skills:</span> ${matchingSkills}</div>` : ''}
+    ${desc ? `<div class="job-desc">${escHTML(desc)}${job.description && job.description.length > 220 ? '…' : ''}</div>` : ''}
     ${reason}
     <div class="job-card-footer">
-      <div style="display:flex;flex-direction:column;gap:3px">${sal}${src}</div>
+      <div style="display:flex;flex-direction:column;gap:3px">${sal}</div>
       <a class="btn-apply" href="${applyUrl}" target="_blank" rel="noopener noreferrer">Apply Now →</a>
     </div>
   </div>`;
 }
+
 
 function escHTML(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');

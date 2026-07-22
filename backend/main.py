@@ -48,6 +48,7 @@ async def serve_js():
 
 class SearchRequest(BaseModel):
     resume_data: dict
+    custom_query: Optional[str] = ""
     location: Optional[str] = ""
     work_mode: Optional[str] = "Any"   # Any | Remote | Hybrid | Onsite
     rapidapi_key: Optional[str] = ""
@@ -78,7 +79,7 @@ async def health():
 @app.post("/api/upload-resume")
 async def upload_resume(file: UploadFile = File(...)):
     """
-    Upload a resume (PDF or DOCX), extract text, and analyze it with Gemini AI.
+    Upload a resume (PDF or DOCX), extract text, and analyze it with Groq AI.
     Returns structured resume data.
     """
     if not GROQ_API_KEY or GROQ_API_KEY == "your_groq_api_key_here":
@@ -141,6 +142,8 @@ async def search_jobs(request: SearchRequest):
 
     # Generate search keywords from resume
     keywords = generate_search_keywords(resume_data)
+    if request.custom_query and request.custom_query.strip():
+        keywords.insert(0, request.custom_query.strip())
 
     # Search all sources in parallel
     try:

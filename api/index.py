@@ -1,12 +1,11 @@
-import sys
 import os
+import sys
 
-# Add backend directory to module search path for Vercel runtime execution
-backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend"))
-if backend_dir not in sys.path:
-    sys.path.insert(0, backend_dir)
+# Ensure backend directory is in Python path for Vercel & local execution
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 try:
-    from backend.main import app  # Package style import (clears IDE static linter warnings)
-except ImportError:
-    from main import app          # Direct sys.path import fallback
+    from backend.main import app  # type: ignore # noqa: F401
+except Exception:
+    from main import app  # type: ignore # noqa: F401

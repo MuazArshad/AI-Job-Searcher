@@ -1,11 +1,9 @@
 import os
 import sys
 
-# Ensure backend directory is in Python path for Vercel & local execution
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# Add backend and root paths to sys.path
+backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend"))
+if backend_path not in sys.path:
+    sys.path.insert(0, backend_path)
 
-try:
-    from backend.main import app  # type: ignore # noqa: F401
-except Exception:
-    from main import app  # type: ignore # noqa: F401
+from main import app  # Top-level ASGI application for Vercel

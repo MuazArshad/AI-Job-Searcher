@@ -33,12 +33,12 @@ FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend")
 @app.get("/styles.css", include_in_schema=False)
 async def serve_css():
     css_path = os.path.join(FRONTEND_DIR, "styles.css")
-    return FileResponse(css_path, media_type="text/css")
+    return FileResponse(css_path, media_type="text/css", headers={"Cache-Control": "no-cache"})
 
 @app.get("/app.js", include_in_schema=False)
 async def serve_js():
     js_path = os.path.join(FRONTEND_DIR, "app.js")
-    return FileResponse(js_path, media_type="application/javascript")
+    return FileResponse(js_path, media_type="application/javascript", headers={"Cache-Control": "no-cache"})
 
 
 
